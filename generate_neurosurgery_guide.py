@@ -68,3 +68,5 @@ def hf(canvas,doc):
 doc=SimpleDocTemplate(OUT,pagesize=A4,rightMargin=18*mm,leftMargin=18*mm,topMargin=22*mm,bottomMargin=17*mm,title="Neurosurgery A-Level-Style Core Guide",author="Form & Field")
 doc.build(story,onFirstPage=hf,onLaterPages=hf)
 print("Generated",OUT,os.path.getsize(OUT),"bytes")
+
+# Rebuild trigger: keep the downloadable study guide in sync with the storefront bundle.
