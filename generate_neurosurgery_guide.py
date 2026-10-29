@@ -57,6 +57,9 @@ for n,(title,body) in enumerate(PAGES, start=2):
     story.append(Paragraph(f"{n:02d}  |  {esc(title)}",styles["Head"]))
     story.append(Paragraph(esc(body),styles["BodyX"]))
     if n < 30: story.append(PageBreak())
+# Keep the PDF at exactly 30 pages including its cover.
+PAGES = PAGES[:29]
+
 def hf(canvas,doc):
     canvas.saveState()
     w,h=A4
