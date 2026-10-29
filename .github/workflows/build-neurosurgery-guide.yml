@@ -1,0 +1,35 @@
+name: Build neurosurgery guide PDF
+on:
+  push:
+    branches: [main]
+    paths:
+      - "generate_neurosurgery_guide.py"
+      - ".github/workflows/build-neurosurgery-guide.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PDF library
+        run: pip install reportlab
+      - name: Generate guide
+        run: python generate_neurosurgery_guide.py
+      - name: Commit generated PDF
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Neurosurgery_A_Level_Core_Guide.pdf
+          if git diff --cached --quiet; then
+            echo "PDF is already up to date."
+          else
+            git commit -m "Build neurosurgery A-level core guide PDF"
+            git push
+          fi
