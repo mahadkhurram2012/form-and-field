@@ -52,14 +52,15 @@ styles.add(ParagraphStyle(name="Head",parent=styles["Heading1"],fontName="Helvet
 styles.add(ParagraphStyle(name="BodyX",parent=styles["BodyText"],fontName="Helvetica",fontSize=8.6,leading=11.2,textColor=HexColor("#243247"),spaceAfter=7))
 def esc(s):
     return html.escape(s).replace("→","&rarr;").replace("⁺","<super>+</super>")
+OMIT = {"What neurosurgeons do", "Research and innovation", "Case study: sudden symptoms", "Case study: spinal compression", "Anaesthesia and theatre safety", "Peripheral and cranial nerves"}
+PAGES = [item for item in PAGES if item[0] not in OMIT]
+assert len(PAGES) == 29
+
 story=[Spacer(1,35*mm),Paragraph("NEUROSURGERY",styles["Big"]),Paragraph("A-LEVEL-STYLE CORE GUIDE",styles["Big"]),Spacer(1,7*mm),Paragraph("30-page learning resource · Brain, spine, nerves and surgical principles",styles["Sub"]),Spacer(1,10*mm),Paragraph("<b>FOUNDATIONS</b> · Anatomy, pathways, CSF and blood supply",styles["BodyX"]),Paragraph("<b>CONDITIONS</b> · Tumours, aneurysms, hydrocephalus, epilepsy and spinal disease",styles["BodyX"]),Paragraph("<b>CLINICAL THINKING</b> · Examination, imaging, risk and treatment choices",styles["BodyX"]),Paragraph("<b>REVISION</b> · Case studies, exam questions and answers",styles["BodyX"]),Spacer(1,20*mm),Paragraph("FORM &amp; FIELD · SCHOLAR STUDIO BUNDLE",styles["Sub"]),PageBreak()]
 for n,(title,body) in enumerate(PAGES, start=2):
     story.append(Paragraph(f"{n:02d}  |  {esc(title)}",styles["Head"]))
     story.append(Paragraph(esc(body),styles["BodyX"]))
     if n < 30: story.append(PageBreak())
-# Keep the PDF at exactly 30 pages including its cover.
-PAGES = PAGES[:29]
-
 def hf(canvas,doc):
     canvas.saveState()
     w,h=A4
