@@ -6,7 +6,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
 from reportlab.lib.colors import HexColor
 import html, os
 
-OUT = "Neurosurgery_A_Level_Core_Guide.pdf"
+OUT = "guide-dist/Neurosurgery_A_Level_Core_Guide.pdf"
 PAGES = [
 ("How to use this guide","A student-friendly A-level-style introduction to neurosurgery: anatomy, physiology, common conditions, investigations, surgery, ethics and revision. This is educational material, not medical advice or a substitute for your exam-board specification. Study each condition using: definition → mechanism → symptoms/signs → investigations → treatment options → risks and follow-up. Explain cause and effect rather than memorising lists. Sudden one-sided weakness, speech difficulty, sudden severe headache, reduced consciousness, or a seizure lasting five minutes or repeated seizures without recovery needs urgent emergency assessment; call 999 in the UK."),
 ("What neurosurgeons do","Neurosurgeons assess disorders of the brain, spinal cord, spine, nerves and their coverings. Examples include biopsy or resection of selected tumours, treatment of some aneurysms, CSF diversion for hydrocephalus, spinal decompression, and selected emergency operations for bleeding or pressure. Many neurological conditions do not require surgery. Care often involves neurosurgeons, neurologists, neuroradiologists, anaesthetists, specialist nurses, oncologists and rehabilitation teams. Neurology mainly treats nervous-system disorders medically; neurosurgery focuses on conditions that may benefit from an operation. Their work overlaps. Decisions balance likely benefit, risk, alternatives, uncertainty, quality of life and the person's priorities."),
@@ -65,6 +65,7 @@ def hf(canvas,doc):
         canvas.setFont("Helvetica-Bold",7.5);canvas.setFillColor(HexColor("#173b6c"));canvas.drawString(18*mm,h-11.5*mm,"FORM & FIELD | NEUROSURGERY CORE GUIDE")
         canvas.setFont("Helvetica",7.5);canvas.setFillColor(HexColor("#738198"));canvas.drawRightString(w-18*mm,10*mm,f"Page {doc.page}")
     canvas.restoreState()
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
 doc=SimpleDocTemplate(OUT,pagesize=A4,rightMargin=18*mm,leftMargin=18*mm,topMargin=22*mm,bottomMargin=17*mm,title="Neurosurgery A-Level-Style Core Guide",author="Form & Field")
 doc.build(story,onFirstPage=hf,onLaterPages=hf)
 print("Generated",OUT,os.path.getsize(OUT),"bytes")
