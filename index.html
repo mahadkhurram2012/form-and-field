@@ -56,9 +56,9 @@ document.addEventListener("click",function(event){
  const notice=demoForm.querySelector("button[type=submit]").previousElementSibling;
  demoForm.insertBefore(paymentBox,notice);
  const simNumber=paymentBox.querySelector("#sim-card-number"), simExpiry=paymentBox.querySelector("#sim-expiry"), simCvc=paymentBox.querySelector("#sim-cvc");
- simNumber.addEventListener("input",e=>{const v=e.target.value.replace(/\\D/g,"").slice(0,16);e.target.value=v.replace(/(.{4})/g,"$1 ").trim()});
- simExpiry.addEventListener("input",e=>{let v=e.target.value.replace(/\\D/g,"").slice(0,4);if(v.length>2)v=v.slice(0,2)+"/"+v.slice(2);e.target.value=v});
- simCvc.addEventListener("input",e=>e.target.value=e.target.value.replace(/\\D/g,"").slice(0,4));
+ simNumber.addEventListener("input",e=>{const v=e.target.value.replace(/\D/g,"").slice(0,16);e.target.value=v.replace(/(.{4})/g,"$1 ").trim()});
+ simExpiry.addEventListener("input",e=>{let v=e.target.value.replace(/\D/g,"").slice(0,4);if(v.length>2)v=v.slice(0,2)+"/"+v.slice(2);e.target.value=v});
+ simCvc.addEventListener("input",e=>e.target.value=e.target.value.replace(/\D/g,"").slice(0,4));
  paymentBox.querySelector("#sim-fill-card").addEventListener("click",()=>{paymentBox.querySelector("#sim-card-name").value="ALEX MORGAN";simNumber.value="4242 4242 4242 4242";simExpiry.value="12/30";simCvc.value="123";});
  document.body.appendChild(modal);
  document.getElementById("scholar-demo-cancel").addEventListener("click",()=>modal.remove());
@@ -66,7 +66,7 @@ document.addEventListener("click",function(event){
  document.getElementById("scholar-demo-form").addEventListener("submit",e=>{
   e.preventDefault();
   const submit=e.submitter, err=document.getElementById("scholar-demo-error");
-  const num=simNumber.value.replace(/\\D/g,""), expiry=simExpiry.value, cvc=simCvc.value;
+  const num=simNumber.value.replace(/\D/g,""), expiry=simExpiry.value, cvc=simCvc.value;
   if(submit){submit.disabled=true;submit.textContent="Processing demo payment…";}
   err.textContent="";
   setTimeout(()=>{
