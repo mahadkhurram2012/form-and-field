@@ -37,6 +37,12 @@ button{border:0;border-radius:12px;padding:10px 14px;font-weight:650;cursor:poin
 <div style="margin-top:12px"><label for="level">Study level</label><select id="level"><option value="GCSE">GCSE</option><option value="Year 9">Year 9</option><option value="GCSE grade 8–9">GCSE Grade 8–9</option><option value="A Level">A Level</option><option value="University">University</option><option value="Explain simply">Explain it simply</option></select></div>
 <div class="tools"><button class="secondary" data-prompt="Explain this topic clearly, step by step: ">Explain a topic</button><button class="secondary" data-prompt="Quiz me on this topic one question at a time. Wait for my answer after each question: ">Quiz me</button><button class="secondary" data-prompt="Make a short revision plan for this topic: ">Revision plan</button></div>
 </section>
+<section class="panel">
+<strong>Read a PDF</strong>
+<div class="sub" style="margin:4px 0 12px">Upload a textbook, worksheet or revision guide, then ask Scholar questions about its contents.</div>
+<div class="row"><input id="pdfFile" type="file" accept="application/pdf,.pdf" style="max-width:100%;color:var(--muted)"><button id="uploadPdf" class="secondary" type="button">Upload PDF</button></div>
+<div id="pdfStatus" class="small" style="margin-top:8px">No PDF loaded. Text-based PDFs up to 10 MB are supported.</div>
+</section>
 <section class="panel"><div id="chat" aria-live="polite"><div class="msg assistant"><div class="who">SCHOLAR</div>Hey! Ask me anything. I'll keep track of the conversation while this page remains open, and you can correct me if I misunderstand.</div></div></section>
 <section class="panel">
 <label for="question">Your message</label><textarea id="question" placeholder="Ask a question or follow up on the previous answer…"></textarea>
@@ -49,6 +55,9 @@ button{border:0;border-radius:12px;padding:10px 14px;font-weight:650;cursor:poin
  const gateForm=document.getElementById("gateForm");
  gateForm.addEventListener("submit",e=>{e.preventDefault();if(document.getElementById("gatePassword").value==="37509"){gate.remove();}else{document.getElementById("gateError").textContent="Incorrect password. Try again.";document.getElementById("gatePassword").select();}});
  const API_URL="https://scholar-ai-zdz9.onrender.com/api/chat";
+ const PDF_URL="https://scholar-ai-zdz9.onrender.com/api/pdf";
+ const pdfFile=document.getElementById("pdfFile"), pdfStatus=document.getElementById("pdfStatus"), uploadPdf=document.getElementById("uploadPdf");
+ let pdfText="";
  const question=document.getElementById("question"), chat=document.getElementById("chat"), status=document.getElementById("status"), send=document.getElementById("send");
  let history=[];
  const continuityRules = [
@@ -78,6 +87,24 @@ button{border:0;border-radius:12px;padding:10px 14px;font-weight:650;cursor:poin
  }
  document.querySelectorAll("[data-prompt]").forEach(b=>b.addEventListener("click",()=>{question.value=b.dataset.prompt+question.value;question.focus()}));
  document.getElementById("clear").addEventListener("click",()=>{history=[];chat.innerHTML="";addMessage("SCHOLAR","New chat started. What would you like to learn?","assistant");question.value="";setStatus("New chat")});
+ uploadPdf.addEventListener("click", async ()=>{
+  const file=pdfFile.files&&pdfFile.files[0];
+  if(!file){pdfStatus.textContent="Choose a PDF first.";return;}
+  if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf")){pdfStatus.textContent="Please choose a PDF file.";return;}
+  if(file.size>10*1024*1024){pdfStatus.textContent="That PDF is over the 10 MB limit.";return;}
+  const formData=new FormData();formData.append("pdf",file);
+  uploadPdf.disabled=true;pdfStatus.textContent="Reading PDF…";
+  try{
+   const r=await fetch(PDF_URL,{method:"POST",body:formData});
+   const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw Error("The PDF service returned an unexpected response.");}
+   if(!r.ok)throw Error(data.error||"Couldn't read this PDF.");
+   if(typeof data.text!=="string"||!data.text.trim())throw Error("No readable text was found in this PDF.");
+   pdfText=data.text;
+   pdfStatus.textContent="Loaded: "+file.name+" — "+pdfText.length.toLocaleString()+" characters. Ask Scholar about it below.";
+   setStatus("PDF ready","ok");
+  }catch(e){pdfText="";pdfStatus.textContent=e.message+" Scanned/image-only PDFs may not contain selectable text.";setStatus("PDF failed","err");}
+  finally{uploadPdf.disabled=false;}
+ });
  async function ask(){
   const typed=question.value.trim();if(!typed){setStatus("Write a message first","err");return}
   const level=document.getElementById("level").value;
@@ -85,7 +112,7 @@ button{border:0;border-radius:12px;padding:10px 14px;font-weight:650;cursor:poin
   addMessage("YOU",typed,"user");question.value="";send.disabled=true;setStatus("Thinking…");
   const pending=document.createElement("div");pending.className="msg assistant";pending.textContent="Scholar is thinking…";chat.appendChild(pending);
   try{
-   const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,level,history,pdfText:""})});
+   const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message,level,history,pdfText})});
    const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw Error("The server returned an unexpected response.")}
    if(!r.ok)throw Error(data.error||data.message||("Server error "+r.status));
    const reply=data.reply??data.answer??data.text??data.response;if(typeof reply!=="string"||!reply.trim())throw Error("No answer was returned.");
