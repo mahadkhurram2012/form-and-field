@@ -51,19 +51,29 @@ document.addEventListener("click",function(event){
  document.body.appendChild(modal);
  document.getElementById("scholar-demo-cancel").addEventListener("click",()=>modal.remove());
  document.getElementById("scholar-back").addEventListener("click",()=>modal.remove());
- document.getElementById("scholar-demo-form").addEventListener("submit",e=>{
+ document.getElementById("scholar-demo-form").addEventListener("submit",async e=>{
   e.preventDefault();
   const name=document.getElementById("demo-name").value.trim();
   const email=document.getElementById("demo-email").value.trim();
   const err=document.getElementById("scholar-demo-error");
+  const submit=e.submitter;
   if(!name||!email||!document.getElementById("demo-email").checkValidity()){err.textContent="Please enter your name and a valid email address.";return;}
-  const order={reference:"FF-"+Date.now().toString().slice(-8),name,email,product:productName,price,submittedAt:new Date().toISOString(),status:"Awaiting confirmation"};
-  try{const orders=JSON.parse(localStorage.getItem("ff-order-requests")||"[]");orders.push(order);localStorage.setItem("ff-order-requests",JSON.stringify(orders));}catch(storageError){}
-  const panel=modal.querySelector("div[style*='max-width:1040px']");
-  panel.innerHTML='<header style="height:70px;padding:0 28px;border-bottom:1px solid #e9edf3;display:flex;align-items:center;justify-content:space-between;font-weight:900;letter-spacing:.07em">FORM <span style="color:#64748b;font-weight:500">&amp; FIELD</span><button type="button" id="scholar-close-success" style="border:1px solid #e2e8f0;background:white;border-radius:9px;padding:8px 12px;cursor:pointer;letter-spacing:0">Close ×</button></header><div style="max-width:560px;margin:60px auto;padding:30px 24px;text-align:center"><div style="width:66px;height:66px;border-radius:50%;background:#fff4d8;color:#9a6700;display:grid;place-items:center;font-size:2rem;font-weight:900;margin:0 auto 20px">✓</div><div style="font-size:.72rem;letter-spacing:.15em;font-weight:850;color:#9a6700">ORDER REQUEST RECORDED</div><h1 style="font-size:2rem;letter-spacing:-.04em;margin:12px 0">Thanks, '+name.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))+'.</h1><p style="color:#64748b;line-height:1.7">Your request for '+productName+' has been recorded in this browser. It is <b>awaiting confirmation</b>. No payment has been taken.</p><div style="background:#f7f9fc;border:1px solid #e8edf4;border-radius:12px;padding:16px;margin:25px 0;text-align:left"><div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:10px"><span style="color:#64748b">Reference</span><b>'+order.reference+'</b></div><div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:10px"><span style="color:#64748b">Product</span><b>'+productName+'</b></div><div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#64748b">Total</span><b>'+price+' · Awaiting confirmation</b></div></div><p style="font-size:.82rem;color:#b45309;line-height:1.6">Important: this demo currently saves the request only in the customer’s browser. It has not been emailed to the store owner.</p><button type="button" id="scholar-close-success-bottom" style="width:100%;border:0;border-radius:10px;background:#175ce5;color:white;padding:15px;font-weight:850;font-size:.96rem;cursor:pointer">Return to store</button></div>';
-  document.getElementById("scholar-close-success").addEventListener("click",()=>modal.remove());
-  document.getElementById("scholar-close-success-bottom").addEventListener("click",()=>modal.remove());
- });
+  err.textContent="";
+  if(submit){submit.disabled=true;submit.textContent="Connecting to secure checkout…";}
+  try{
+    const response=await fetch("https://form-field-payments.onrender.com/create-checkout-session",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name,email,product:bundle?"bundle":"scholar"})
+    });
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok||!data.url)throw new Error(data.error||"Secure checkout is not ready yet.");
+    window.location.href=data.url;
+  }catch(error){
+    err.textContent=error.message||"Could not connect to secure checkout. Please try again.";
+    if(submit){submit.disabled=false;submit.textContent="Pay securely · "+price;}
+  }
+});
 });
 function render(){document.getElementById("featured").innerHTML=products.map(card).join("");document.getElementById("catalogue").innerHTML=products.map(card).join("");document.querySelectorAll("[data-cat]").forEach(b=>b.classList.toggle("active",b.dataset.cat===category));}
 function save(){localStorage.setItem("ff-bag",JSON.stringify(bag));document.getElementById("count").textContent=bag.reduce((n,i)=>n+i.qty,0)}
